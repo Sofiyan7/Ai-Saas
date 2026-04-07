@@ -137,7 +137,6 @@ const VideoCard: React.FC<VideoCardProps> = ({ video, onDownload }) => {
               onDownload(getFullVideoUrl(video.publicId), video.title)
             }
           >
-            <a></a>
             <Download size={16} />
           </button>
         </div>
