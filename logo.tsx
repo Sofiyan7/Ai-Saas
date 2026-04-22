@@ -6,7 +6,7 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import { filesize } from "filesize";
 import { Video } from "@prisma/client";
 
-dayjs.extend(relativeTime);
+// dayjs.extend(relativeTime);
 
 interface VideoCardProps {
   video: Video;
