@@ -8,10 +8,10 @@ import { Video } from "@prisma/client";
 
 dayjs.extend(relativeTime);
 
-interface VideoCardProps {
-  video: Video;
-  onDownload: (url: string, title: string) => void;
-}
+// interface VideoCardProps {
+//   video: Video;
+//   onDownload: (url: string, title: string) => void;
+// }
 
 const VideoCard: React.FC<VideoCardProps> = ({ video, onDownload }) => {
   const [isHovered, setIsHovered] = useState(false);
