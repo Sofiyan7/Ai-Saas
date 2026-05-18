@@ -16,7 +16,7 @@ dayjs.extend(relativeTime);
 const VideoCard: React.FC<VideoCardProps> = ({ video, onDownload }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [previewError, setPreviewError] = useState(false);
-  const getThumbnailUrl = useCallback((publicId: string) => {
+  const g etThumbnailUrl = useCallback((publicId: string) => {
     return getCldImageUrl({
       src: publicId,
       width: 400,
