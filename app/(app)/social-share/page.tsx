@@ -1,7 +1,7 @@
 "use client"
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { CldImage, getCldImageUrl } from 'next-cloudinary';
-import { Trash2, Image as ImageIcon } from 'lucide-react';
+import { Trash2, Image as ImageIcon, Sparkles, ChevronDown } from 'lucide-react';
 
 const socialFormats = {
   "Instagram Square (1:1)": { width: 1080, height: 1080, aspectRatio: "1:1" },
@@ -26,11 +26,18 @@ export default function SocialShare() {
   const [isTransforming, setIsTransforming] = useState(false);
   const [images, setImages] = useState<ImageRecord[]>([]);
   const [loadingImages, setLoadingImages] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
   const imageRef = useRef<HTMLImageElement>(null);
 
-  const fetchImages = useCallback(async () => {
+  // AI states
+  const [aiRemoveBg, setAiRemoveBg] = useState(false);
+  const [aiReplaceBgPrompt, setAiReplaceBgPrompt] = useState("");
+  const [aiReplaceFrom, setAiReplaceFrom] = useState("");
+  const [aiReplaceTo, setAiReplaceTo] = useState("");
+
+  const fetchImages = useCallback(async (search = "") => {
     try {
-      const response = await fetch("/api/images");
+      const response = await fetch(`/api/images?search=${encodeURIComponent(search)}`);
       if (response.ok) {
         const data = await response.json();
         setImages(data);
@@ -43,14 +50,14 @@ export default function SocialShare() {
   }, []);
 
   useEffect(() => {
-    fetchImages();
-  }, [fetchImages]);
+    fetchImages(searchQuery);
+  }, [fetchImages, searchQuery]);
 
   useEffect(() => {
     if(uploadedImage){
       setIsTransforming(true);
     }
-  }, [selectedFormat, uploadedImage])
+  }, [selectedFormat, uploadedImage, aiRemoveBg, aiReplaceBgPrompt, aiReplaceFrom, aiReplaceTo])
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -167,6 +174,72 @@ export default function SocialShare() {
                 </select>
               </div>
 
+              {/* AI Workspace Tools */}
+              <div className="collapse collapse-arrow bg-zinc-900 border border-zinc-800 rounded-xl mt-6">
+                <input type="checkbox" /> 
+                <div className="collapse-title text-md font-semibold text-white flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-indigo-400 animate-pulse" />
+                  AI Workspace Tools
+                </div>
+                <div className="collapse-content space-y-4 pt-2">
+                  {/* AI Background Removal */}
+                  <div className="form-control">
+                    <label className="label cursor-pointer justify-start gap-4">
+                      <input 
+                        type="checkbox" 
+                        checked={aiRemoveBg} 
+                        onChange={(e) => setAiRemoveBg(e.target.checked)}
+                        className="checkbox checkbox-primary" 
+                      />
+                      <span className="label-text text-zinc-300 font-medium">Remove Background (AI)</span>
+                    </label>
+                  </div>
+
+                  {/* AI Generative Background Replace */}
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text text-zinc-400">Generative Background Replace (AI)</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. on a sandy beach at sunset, hyperrealistic"
+                      value={aiReplaceBgPrompt}
+                      onChange={(e) => setAiReplaceBgPrompt(e.target.value)}
+                      className="input input-bordered bg-zinc-950 border-zinc-800 text-white w-full text-sm"
+                      disabled={aiRemoveBg} // Overridden by full background removal
+                    />
+                  </div>
+
+                  {/* AI Generative Object Replace */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="form-control">
+                      <label className="label">
+                        <span className="label-text text-zinc-400">Replace Object (AI)</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. coffee cup"
+                        value={aiReplaceFrom}
+                        onChange={(e) => setAiReplaceFrom(e.target.value)}
+                        className="input input-bordered bg-zinc-950 border-zinc-800 text-white w-full text-sm"
+                      />
+                    </div>
+                    <div className="form-control">
+                      <label className="label">
+                        <span className="label-text text-zinc-400">With (AI)</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. glass of orange juice"
+                        value={aiReplaceTo}
+                        onChange={(e) => setAiReplaceTo(e.target.value)}
+                        className="input input-bordered bg-zinc-950 border-zinc-800 text-white w-full text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div className="mt-6 relative">
                 <h3 className="text-lg font-semibold mb-2 text-zinc-300">Preview:</h3>
                 <div className="flex justify-center bg-black/40 rounded-xl p-4 border border-zinc-800">
@@ -186,6 +259,9 @@ export default function SocialShare() {
                     gravity='auto'
                     ref={imageRef}
                     onLoad={() => setIsTransforming(false)}
+                    removeBackground={aiRemoveBg}
+                    replaceBackground={aiReplaceBgPrompt || undefined}
+                    replace={aiReplaceFrom && aiReplaceTo ? [aiReplaceFrom, aiReplaceTo] : undefined}
                   />
                 </div>
               </div>
@@ -203,10 +279,19 @@ export default function SocialShare() {
       {/* Image Gallery History */}
       <div className="card bg-base-200 border border-zinc-800 shadow-xl">
         <div className="card-body">
-          <h2 className="card-title mb-4 text-white flex items-center gap-2">
-            <ImageIcon className="w-5 h-5 text-primary" />
-            Your Uploaded Images
-          </h2>
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
+            <h2 className="card-title text-white flex items-center gap-2">
+              <ImageIcon className="w-5 h-5 text-primary" />
+              Your Uploaded Images
+            </h2>
+            <input
+              type="text"
+              placeholder="Search images..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="input input-bordered input-sm bg-zinc-900 border-zinc-800 text-white w-full sm:max-w-xs text-sm"
+            />
+          </div>
           
           {loadingImages ? (
             <div className="flex justify-center py-8">

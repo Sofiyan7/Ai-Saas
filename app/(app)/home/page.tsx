@@ -3,17 +3,19 @@ import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import VideoCard from "@/components/VideoCard";
 import { Video } from "@prisma/client";
+
 function Home() {
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [activeVideoUrl, setActiveVideoUrl] = useState<string | null>(null);
   const [activeVideoTitle, setActiveVideoTitle] = useState<string>("");
 
-  const fetchVideos = useCallback(async () => {
+  const fetchVideos = useCallback(async (search = "") => {
     try {
-      const response = await axios.get("/api/videos");
+      const response = await axios.get(`/api/videos?search=${encodeURIComponent(search)}`);
       if (Array.isArray(response.data)) {
         setVideos(response.data);
       } else {
@@ -28,8 +30,8 @@ function Home() {
   }, []);
 
   useEffect(() => {
-    fetchVideos();
-  }, [fetchVideos]);
+    fetchVideos(searchQuery);
+  }, [fetchVideos, searchQuery]);
 
   const handleDownload = useCallback((url: string, title: string) => {
     const link = document.createElement("a");
@@ -59,11 +61,21 @@ function Home() {
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6 text-white">Your Videos</h1>
+    <div className="container mx-auto p-4 space-y-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <h1 className="text-3xl font-bold text-white">Your Videos</h1>
+        <input
+          type="text"
+          placeholder="Search videos..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="input input-bordered bg-zinc-900 border-zinc-800 text-white w-full sm:max-w-xs text-sm"
+        />
+      </div>
+
       {videos.length === 0 ? (
         <div className="text-center text-lg text-zinc-500 py-12 border-2 border-dashed border-zinc-800 rounded-2xl">
-          No videos available. Click "Video Upload" to add one!
+          {searchQuery ? "No matching videos found." : "No videos available. Click 'Video Upload' to add one!"}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

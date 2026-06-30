@@ -51,6 +51,16 @@ const VideoCard: React.FC<VideoCardProps> = ({ video, onDownload, onDeleteComple
     });
   }, []);
 
+  const getVerticalVideoUrl = useCallback((publicId: string) => {
+    return getCldVideoUrl({
+      src: publicId,
+      width: 1080,
+      height: 1920,
+      crop: "fill",
+      gravity: "auto",
+    });
+  }, []);
+
   const formatSize = useCallback((size: number) => {
     return filesize(size);
   }, []);
@@ -170,15 +180,44 @@ const VideoCard: React.FC<VideoCardProps> = ({ video, onDownload, onDeleteComple
                 <Trash2 size={16} />
               )}
             </button>
-            <button
-              className="btn btn-primary btn-sm text-white"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDownload(getFullVideoUrl(video.publicId), video.title);
-              }}
-            >
-              <Download size={16} />
-            </button>
+            <div className="dropdown dropdown-end">
+              <label
+                tabIndex={0}
+                className="btn btn-primary btn-sm text-white flex items-center gap-1"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Download size={16} />
+                Download
+              </label>
+              <ul
+                tabIndex={0}
+                className="dropdown-content menu p-2 shadow-2xl bg-zinc-900 border border-zinc-800 rounded-xl w-52 mt-1 z-10 text-zinc-200"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <li>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDownload(getFullVideoUrl(video.publicId), video.title);
+                    }}
+                    className="flex items-center gap-2 hover:bg-zinc-800 text-white rounded-lg px-3 py-2 text-xs"
+                  >
+                    Original Format
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDownload(getVerticalVideoUrl(video.publicId), `${video.title}_vertical`);
+                    }}
+                    className="flex items-center gap-2 hover:bg-zinc-800 text-white rounded-lg px-3 py-2 text-xs"
+                  >
+                    TikTok/Shorts (9:16 AI Crop)
+                  </button>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>

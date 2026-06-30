@@ -18,8 +18,15 @@ export async function GET(request: NextRequest) {
         if (!userId) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
+
+        const { searchParams } = new URL(request.url);
+        const search = searchParams.get("search") || "";
+
         const images = await prisma.image.findMany({
-            where: { userId },
+            where: { 
+                userId,
+                publicId: search ? { contains: search, mode: "insensitive" } : undefined
+            },
             orderBy: { createdAt: "desc" }
         });
         return NextResponse.json(images);

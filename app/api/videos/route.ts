@@ -18,8 +18,18 @@ export async function GET(request: NextRequest){
         if (!userId) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
+
+        const { searchParams } = new URL(request.url);
+        const search = searchParams.get("search") || "";
+
         const videos = await prisma.video.findMany({
-            where: { userId },
+            where: { 
+                userId,
+                OR: search ? [
+                    { title: { contains: search, mode: "insensitive" } },
+                    { description: { contains: search, mode: "insensitive" } }
+                ] : undefined
+            },
             orderBy: {createdAt: "desc"}
         })
         return NextResponse.json(videos);
