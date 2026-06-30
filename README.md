@@ -4,6 +4,31 @@ A full-stack media management and transformation platform. Built with Next.js (A
 
 ---
 
+## 🏗️ System Architecture
+
+```mermaid
+graph TD
+    User([User Client])
+    Clerk[Clerk Auth Engine]
+    Next[Next.js Server API Routes]
+    DB[(Neon Postgres Database)]
+    Cloudinary[Cloudinary Media Engine]
+
+    %% User Flow
+    User -->|1. Authenticate session| Clerk
+    User -->|2. Upload asset & configure parameters| Next
+    User -->|6. Render transformed image/video stream| Cloudinary
+
+    %% Backend integrations
+    Next -->|3. Store asset records & userId| DB
+    Next -->|4. Push media payload| Cloudinary
+    
+    %% Transformations
+    Cloudinary -->|5. Compute AI background removal / vertical reframe / generative fill| Cloudinary
+```
+
+---
+
 ## ⚡ Core Capabilities
 
 *   **🔒 Multi-User Isolation:** Complete workspace isolation. Media assets, uploads, and search queries are strictly partitioned by authenticated Clerk User IDs.
